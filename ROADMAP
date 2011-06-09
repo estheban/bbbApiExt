@@ -1,0 +1,16 @@
+Version 0.1.0
+- Reproduire le même comportement que l'API de BigBlueButton (voir la documentation)
+
+Version 0.2.0
+- Abstraction du "securitySalt" par client (ne pas donnée le "securitySalt" du serveur directement au client final, mais sa propre clef)
+- Gestion des droits sur les salles (si un utilisateur A crée une salle, l'utilisateur B ne peu y accéder)
+
+Version 0.3.0
+- Interface de gestion
+- ajout, suppression d'utilisateur
+- Tableau de bord
+
+Version 0.4.0 (Release Candidate pour la version 1.0.0)
+- Exécuter Node.js en tant que service
+- Optimisation de la performance, refactorisation du code
+- Documentation
