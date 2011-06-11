@@ -31,19 +31,27 @@ app.configure('production', function(){
   app.use(express.errorHandler()); 
 });
 
+// DB Configuration
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/bbbApiExt');
+
+// BBB Server configuration
+var bbb = require('bbb');
+bbb.securitySalt = "57e120a999816bdb5938dc7e80f15aec"; // TODO: Specify the BBB sercuritySalt
+bbb.url          = "bbb.evocatio.net"; // TODO: Specify the Address of the server (hostname or IP)
+
 // Routes
+
 app.get('/:clientId/api/:cmd', function(req, res) {
-    var bbb = require('bbb');
-    bbb.securitySalt = ""; // TODO: Specify the BBB sercuritySalt
-    bbb.url          = ""; // TODO: Specify the Address of the server (hostname or IP)
+
 
     //console.log(req.params.clientId);
     console.log(req.params);
     console.log(req.query);
 
     // get client securitySalt from db
-    var mongoose = require('mongoose');
-    mongoose.connect('mongodb://localhost/my_database');
+    //var mongoose = require('mongoose');
+    //mongoose.connect('mongodb://localhost/bbbApiExt');
     
     var Schema = mongoose.Schema;
     
@@ -122,10 +130,12 @@ app.get('/:clientId/api/:cmd', function(req, res) {
 app.get('/admin', function(req, res) {
     console.log(req.params);
     console.log(req.query);
+    
+    //console.log(app.get('db'));
 
     // get client securitySalt from db
-    var mongoose = require('mongoose');
-    mongoose.connect('mongodb://localhost/my_database');
+    //var mongoose = app.get('db');//require('mongoose');
+    //mongoose.connect('mongodb://localhost/my_database');
     
     var Schema = mongoose.Schema;
     
@@ -152,8 +162,8 @@ app.post('/admin/add', function(req, res) {
     console.log("ADD");
     console.log(req.body.user);
     
-    var mongoose = require('mongoose');
-    mongoose.connect('mongodb://localhost/my_database');
+    //var mongoose = require('mongoose');
+    //mongoose.connect('mongodb://localhost/my_database');
     
     var Schema = mongoose.Schema;
     
@@ -179,8 +189,8 @@ app.get('/admin/delete/:id', function(req, res) {
     console.log(req.params);
 
     // get client securitySalt from db
-    var mongoose = require('mongoose');
-    mongoose.connect('mongodb://localhost/my_database');
+    //var mongoose = require('mongoose');
+    //mongoose.connect('mongodb://localhost/my_database');
     
     var Schema = mongoose.Schema;
     
