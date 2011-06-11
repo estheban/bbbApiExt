@@ -13,7 +13,6 @@ var express = require('express');
 var app = module.exports = express.createServer();
 
 // Configuration
-
 app.configure(function(){
   app.set('views', __dirname + '/views');
   app.set('view engine', 'ejs');
@@ -35,8 +34,8 @@ app.configure('production', function(){
 // Routes
 app.get('/:clientId/api/:cmd', function(req, res) {
     var bbb = require('bbb');
-    bbb.securitySalt = "57e120a999816bdb5938dc7e80f15aec"; // TODO: Specify the BBB sercuritySalt
-    bbb.url          = "bbb.evocatio.net"; // TODO: Specify the Address of the server (hostname or IP)
+    bbb.securitySalt = ""; // TODO: Specify the BBB sercuritySalt
+    bbb.url          = ""; // TODO: Specify the Address of the server (hostname or IP)
 
     //console.log(req.params.clientId);
     console.log(req.params);
@@ -54,23 +53,14 @@ app.get('/:clientId/api/:cmd', function(req, res) {
     });
     
     var Client = mongoose.model('ClientModel',ClientModel);
-    /*
-    var customer = new Client();
-    customer.clientId = req.params.clientId;
-    customer.securitySalt = "asdfasdf";
-    customer.save(function(err) { });
-    */
    
     Client.findOne({ clientId: req.params.clientId}, function (err, customer){
-      // doc is a Document
       console.log(customer);
       console.log(err);
       if(customer == null) {
           res.contentType("text/xml");
           res.send("<response><returncode>FAILED</returncode><messageKey>checksumError</messageKey><message>You did not pass the checksum security check</message></response>");
       } else {
-
-
           var checksum = req.query["checksum"];
 
             // generate queryString
@@ -95,8 +85,6 @@ app.get('/:clientId/api/:cmd', function(req, res) {
             console.log("Computed checksum: "+bbb.checksum(customer.securitySalt, req.params.cmd, params));
 
             // validate query string
-            //if(true) {
-            //    console.log("== Checksum validatation SKIPED, always accept, DEBUG ONLY");
             if(checksum == bbb.checksum(customer.securitySalt, req.params.cmd, params)) {
                 console.log("== Checksum validated");
                 console.log("== Command : "+req.params.cmd);
@@ -123,8 +111,8 @@ app.get('/:clientId/api/:cmd', function(req, res) {
                 }
             } else {
                 // Throw Error
-              res.contentType("text/xml");
-              res.send("<response><returncode>FAILED</returncode><messageKey>checksumError</messageKey><message>You did not pass the checksum security check</message></response>");
+                res.contentType("text/xml");
+                res.send("<response><returncode>FAILED</returncode><messageKey>checksumError</messageKey><message>You did not pass the checksum security check</message></response>");
             }
         }
     });
@@ -147,12 +135,6 @@ app.get('/admin', function(req, res) {
     });
     
     var Client = mongoose.model('ClientModel',ClientModel);
-    /*
-    var customer = new Client();
-    customer.clientId = req.params.clientId;
-    customer.securitySalt = "asdfasdf";
-    customer.save(function(err) { });
-    */
    
     Client.find({}, function (err, customers){
       // doc is a Document
@@ -160,16 +142,41 @@ app.get('/admin', function(req, res) {
       console.log(err);
       res.render("index",{users: customers});
     });
-        /*    break;
-        default:
-            res.send("Default");
-            break;
-    }*/
+});
+
+app.get('/admin/add', function(req, res) {
+   res.render("add"); 
+});
+
+app.post('/admin/add', function(req, res) {
+    console.log("ADD");
+    console.log(req.body.user);
+    
+    var mongoose = require('mongoose');
+    mongoose.connect('mongodb://localhost/my_database');
+    
+    var Schema = mongoose.Schema;
+    
+    var ClientModel = new Schema({
+        clientId: String,
+        securitySalt: String
+    });
+    
+    var Client = mongoose.model('ClientModel',ClientModel);
+    
+    var customer = new Client();
+    customer.clientId = req.body.user.clientId;
+    customer.securitySalt = req.body.user.securitySalt;
+    customer.save(function(err) {
+        res.redirect('/admin');
+    });
+    
+    
 });
 
 app.get('/admin/delete/:id', function(req, res) {
+    console.log("DELETE");
     console.log(req.params);
-    console.log(req.query);
 
     // get client securitySalt from db
     var mongoose = require('mongoose');
@@ -184,27 +191,16 @@ app.get('/admin/delete/:id', function(req, res) {
     
     var Client = mongoose.model('ClientModel',ClientModel);
    
-    Client.findOne({ clientId: req.params.clientId}, function (err, doc){
-        console.log(doc);
-        //.remove({_id: req.param.id});
+    //mongoose.ClientModel.remove({_id: req.params.clientId});
     
-    /*, function (err, doc){
-      // doc is a Document
-      //console.log(doc);
-      console.log(err);
-      res.send("OK");
-    });
-    */
-        res.send("OK1");
+    Client.remove({ _id: req.params.id}, function (err){
+        if(err != null)
+            console.log(err);
+
+        res.redirect('/admin');
     });
 });
-/*
-app.get('/', function(req, res){
-  res.render('index', {
-    title: 'Express'
-  });
-});
-*/
+
 app.listen(3000);
 console.log("bbbApiExt server listening on port %d", app.address().port);
 
