@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <title>Administration</title>
+        <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.13.custom.css" rel="stylesheet" />	
+        <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css" />
+        
+        <script type="text/javascript" src="js/jquery-1.5.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-1.8.13.custom.min.js"></script>
+        <script type="text/javascript" src="js/jquery.jqGrid.min.js"></script>
+        <script type="text/javascript">
+            $(function(){
+
+$("#users").jqGrid({
+	url:'/admin/list',
+	datatype: "json",
+	height: 250,
+   	colNames:['ID','Username'],
+   	colModel:[
+   		{name:'id',index:'id', width:90, sorttype:"int", editable: true},
+   		{name:'name',index:'name', width:150,editable: true,editoptions:{size:"20",maxlength:"30"}}
+   	],
+	onSelectRow: function(id){
+		if(id && id!==lastsel2){
+			jQuery('#rowed5').jqGrid('restoreRow',lastsel2);
+			jQuery('#rowed5').jqGrid('editRow',id,true);
+			lastsel2=id;
+		}
+	},
+	editurl: "server.php",
+	caption: "Input Types"
+
+});
+
+  jQuery("#users").jqGrid('navGrid','#pager2',{edit:false,add:false,del:false});
+            });
+        </script>
+        <style type="text/css">
+
+        </style>	
+    </head>
+    <body>
+        <h1>Administration</h1>
+        <table id="users"></table>
+        <table id="list2"></table>
+<div id="pager2"></div>
+    </body>
+</html>
+
+

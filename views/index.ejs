@@ -1,0 +1,21 @@
+<h1>Users</h1>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Security Salt</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <% for(var i=0; i<users.length; i++) {%>
+        <tr>
+            <td><%= users[i]._id %></td>
+            <td><%= users[i].clientId %></td>
+            <td><%= users[i].securitySalt %></td>
+            <td><a href="/admin/delete/<%= users[i]._id %>">Delete</a></td>
+        </tr>
+        <% } %>
+    </tbody>
+</table>
