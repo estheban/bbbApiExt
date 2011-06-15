@@ -1,4 +1,4 @@
-<h1>Users</h1>
+<h2>Users</h2>
 <table>
     <thead>
         <tr>
@@ -20,3 +20,23 @@
     </tbody>
 </table>
 <a href="/admin/add">Add</a>
+
+<h2>Meetings</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>customerId</th>
+            <th>meetingId</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% for(var i=0; i<users.length; i++) {%>
+        <tr>
+            <td><%= meetings[i]._id %></td>
+            <td><%= meetings[i].clientId %></td>
+            <td><%= meetings[i].meetingId %></td>
+        </tr>
+        <% } %>
+    </tbody>
+</table>

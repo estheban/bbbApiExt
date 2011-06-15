@@ -35,34 +35,34 @@ app.configure('production', function(){
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/bbbApiExt');
 
+// Model Definition
+var Schema = mongoose.Schema;
+
+var CustomerModel = new Schema({
+    clientId: String,
+    securitySalt: String
+});
+var Customer = mongoose.model('Customers',CustomerModel);
+
+var MeetingModel = new Schema({
+    clientId: String,
+    meetingId: String
+});
+var Meeting = mongoose.model('Meetings',MeetingModel);
+
 // BBB Server configuration
 var bbb = require('bbb');
-bbb.securitySalt = "57e120a999816bdb5938dc7e80f15aec"; // TODO: Specify the BBB sercuritySalt
-bbb.url          = "bbb.evocatio.net"; // TODO: Specify the Address of the server (hostname or IP)
+bbb.securitySalt = ""; // TODO: Specify the BBB sercuritySalt
+bbb.url          = ""; // TODO: Specify the Address of the server (hostname or IP)
 
 // Routes
-
 app.get('/:clientId/api/:cmd', function(req, res) {
-
-
     //console.log(req.params.clientId);
     console.log(req.params);
     console.log(req.query);
 
     // get client securitySalt from db
-    //var mongoose = require('mongoose');
-    //mongoose.connect('mongodb://localhost/bbbApiExt');
-    
-    var Schema = mongoose.Schema;
-    
-    var ClientModel = new Schema({
-        clientId: String,
-        securitySalt: String
-    });
-    
-    var Client = mongoose.model('ClientModel',ClientModel);
-   
-    Client.findOne({ clientId: req.params.clientId}, function (err, customer){
+    Customer.findOne({ clientId: req.params.clientId}, function (err, customer){
       console.log(customer);
       console.log(err);
       if(customer == null) {
@@ -82,8 +82,6 @@ app.get('/:clientId/api/:cmd', function(req, res) {
                 }
                 params = params.substring(0, params.length-1)
                 // end build params string
-            } else {
-                var params = paramsObj;
             }
 
             console.log("Server : securitySalt: "+bbb.securitySalt);
@@ -97,25 +95,43 @@ app.get('/:clientId/api/:cmd', function(req, res) {
                 console.log("== Checksum validated");
                 console.log("== Command : "+req.params.cmd);
 
-                if(req.params.cmd == "join") {
-                    console.log("==> JOIN");
-                    console.log("====> bbb.url: "+bbb.url);
-                    //console.log("====> Method: "+req.method);
-                    console.log("====> URL: "+req.url);
-                    var queryString = bbb.generateQueryString("bigbluebutton", bbb.securitySalt, req.params.cmd, params);
-                    console.log("====> queryString: "+queryString);
+                switch(req.params.cmd) {
+                    case "join":
+                        console.log("==> JOIN");
+                        console.log("====> bbb.url: "+bbb.url);
+                        //console.log("====> Method: "+req.method);
+                        console.log("====> URL: "+req.url);
+                        var queryString = bbb.generateQueryString("bigbluebutton", bbb.securitySalt, req.params.cmd, params);
+                        console.log("====> queryString: "+queryString);
 
-                    res.writeHead(302, {
-                      'Location': 'http://'+bbb.url+queryString
-                    });
-                    res.end();
-                } else {
-                    bbb.query(req.params.cmd, params, function(xmlData) {
-                        res.contentType("text/xml");
-                        var json2xml = require('json2xml');
+                        res.writeHead(302, {
+                          'Location': 'http://'+bbb.url+queryString
+                        });
+                        res.end();
+                        break;
+                        
+                    case "create":
+                        var meeting = new Meeting();
+                        meeting.clientId = customer.clientId;
+                        meeting.meetingId = req.query.meetingID;
+                        meeting.save(function(err) {});
+                    default:
+                        Meeting.find({ clientId: req.params.clientId}, function (err, meetings){
+                            bbb.query(req.params.cmd, params, function(data) {
+                                console.log("DATA:"); console.log(data);
+                                
+                                for(meeting in data.meetings.meeting) {
+                                    console.log(meeting);
+                                }
+                                
+                                res.contentType("text/xml");
+                                var json2xml = require('json2xml');
 
-                        res.send(json2xml.toXml("response", xmlData));
-                    });
+                                res.send(json2xml.toXml("response", data));
+                            });
+                        });
+                        
+                        break;
                 }
             } else {
                 // Throw Error
@@ -124,34 +140,25 @@ app.get('/:clientId/api/:cmd', function(req, res) {
             }
         }
     });
-//    console.log(first_user) 
 });
 
 app.get('/admin', function(req, res) {
     console.log(req.params);
     console.log(req.query);
     
-    //console.log(app.get('db'));
-
-    // get client securitySalt from db
-    //var mongoose = app.get('db');//require('mongoose');
-    //mongoose.connect('mongodb://localhost/my_database');
-    
-    var Schema = mongoose.Schema;
-    
-    var ClientModel = new Schema({
-        clientId: String,
-        securitySalt: String
-    });
-    
-    var Client = mongoose.model('ClientModel',ClientModel);
-   
-    Client.find({}, function (err, customers){
-      // doc is a Document
+    Customer.find({}, function (err, customers){
       console.log(customers);
       console.log(err);
-      res.render("index",{users: customers});
+      
+      Meeting.find({}, function (err, meetings){
+          console.log(meetings);
+          console.log(err);
+          res.render("index",{users: customers, meetings: meetings});
+        });
+      //res.render("index",{users: customers});
     });
+    
+    
 });
 
 app.get('/admin/add', function(req, res) {
@@ -162,48 +169,19 @@ app.post('/admin/add', function(req, res) {
     console.log("ADD");
     console.log(req.body.user);
     
-    //var mongoose = require('mongoose');
-    //mongoose.connect('mongodb://localhost/my_database');
-    
-    var Schema = mongoose.Schema;
-    
-    var ClientModel = new Schema({
-        clientId: String,
-        securitySalt: String
-    });
-    
-    var Client = mongoose.model('ClientModel',ClientModel);
-    
-    var customer = new Client();
+    var customer = new Customer();
     customer.clientId = req.body.user.clientId;
     customer.securitySalt = req.body.user.securitySalt;
     customer.save(function(err) {
         res.redirect('/admin');
     });
-    
-    
 });
 
 app.get('/admin/delete/:id', function(req, res) {
     console.log("DELETE");
     console.log(req.params);
 
-    // get client securitySalt from db
-    //var mongoose = require('mongoose');
-    //mongoose.connect('mongodb://localhost/my_database');
-    
-    var Schema = mongoose.Schema;
-    
-    var ClientModel = new Schema({
-        clientId: String,
-        securitySalt: String
-    });
-    
-    var Client = mongoose.model('ClientModel',ClientModel);
-   
-    //mongoose.ClientModel.remove({_id: req.params.clientId});
-    
-    Client.remove({ _id: req.params.id}, function (err){
+    Customer.remove({ _id: req.params.id}, function (err){
         if(err != null)
             console.log(err);
 
@@ -213,4 +191,3 @@ app.get('/admin/delete/:id', function(req, res) {
 
 app.listen(3000);
 console.log("bbbApiExt server listening on port %d", app.address().port);
-
