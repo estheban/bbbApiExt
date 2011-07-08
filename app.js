@@ -107,13 +107,32 @@ app.get('/:clientId/api/:cmd', function(req, res) {
                         break;
                         
                     case "create":
+                        console.log("======== CREATE ===========");
                         /*var meeting = new Meeting();
                         meeting.clientId = customer.clientId;
                         meeting.meetingId = req.query.meetingID;
                         meeting.save(function(err) {});
                         
                         */
-                        //customer.meetings.push("patate");
+                       if(!customer.meetings) {
+                           customer.meetings = Array();
+                       }
+                       
+                       bbb.query(req.params.cmd, params, function(data) {
+                           console.log("DATA:"); console.log(data);
+                           customer.meetings.push(data);
+                           
+                           res.contentType("text/xml");
+                           var json2xml = require('json2xml');
+                           res.send(json2xml.toXml("response", data));
+                           
+                           /*
+                           console.log("create :: CUSTOMER MEETINGS");
+                           console.log(customer.meetings);
+                           */
+                       });
+                       break;
+                       
                     default:
                         Meeting.find({ clientId: req.params.clientId}, function (err, meetings){
                             bbb.query(req.params.cmd, params, function(data) {
