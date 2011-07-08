@@ -52,8 +52,8 @@ var Meeting = mongoose.model('Meetings',MeetingModel);
 
 // BBB Server configuration
 var bbb = require('bbb');
-bbb.securitySalt = ""; // TODO: Specify the BBB sercuritySalt
-bbb.url          = ""; // TODO: Specify the Address of the server (hostname or IP)
+bbb.securitySalt = "57e120a999816bdb5938dc7e80f15aec"; // TODO: Specify the BBB sercuritySalt
+bbb.url          = "bbb.evocatio.net"; // TODO: Specify the Address of the server (hostname or IP)
 
 // Routes
 app.get('/:clientId/api/:cmd', function(req, res) {
@@ -62,6 +62,7 @@ app.get('/:clientId/api/:cmd', function(req, res) {
     console.log(req.query);
 
     // get client securitySalt from db
+    console.log("FindOne Customer");
     Customer.findOne({ clientId: req.params.clientId}, function (err, customer){
       console.log(customer);
       console.log(err);
@@ -97,12 +98,7 @@ app.get('/:clientId/api/:cmd', function(req, res) {
 
                 switch(req.params.cmd) {
                     case "join":
-                        console.log("==> JOIN");
-                        console.log("====> bbb.url: "+bbb.url);
-                        //console.log("====> Method: "+req.method);
-                        console.log("====> URL: "+req.url);
                         var queryString = bbb.generateQueryString("bigbluebutton", bbb.securitySalt, req.params.cmd, params);
-                        console.log("====> queryString: "+queryString);
 
                         res.writeHead(302, {
                           'Location': 'http://'+bbb.url+queryString
@@ -111,14 +107,26 @@ app.get('/:clientId/api/:cmd', function(req, res) {
                         break;
                         
                     case "create":
-                        var meeting = new Meeting();
+                        /*var meeting = new Meeting();
                         meeting.clientId = customer.clientId;
                         meeting.meetingId = req.query.meetingID;
                         meeting.save(function(err) {});
+                        
+                        */
+                        //customer.meetings.push("patate");
                     default:
                         Meeting.find({ clientId: req.params.clientId}, function (err, meetings){
                             bbb.query(req.params.cmd, params, function(data) {
                                 console.log("DATA:"); console.log(data);
+                                
+                                // ERROR if only one meeting, need to transform meetings to array
+                                if (!data.meetings) {
+                                    data = {
+                                      returncode: data.returncode,
+                                      meetings: { meeting: [ data ] }
+                                    }
+                                }
+                                
                                 
                                 for(meeting in data.meetings.meeting) {
                                     console.log(meeting);
@@ -149,13 +157,14 @@ app.get('/admin', function(req, res) {
     Customer.find({}, function (err, customers){
       console.log(customers);
       console.log(err);
-      
+      /*
       Meeting.find({}, function (err, meetings){
           console.log(meetings);
           console.log(err);
           res.render("index",{users: customers, meetings: meetings});
         });
-      //res.render("index",{users: customers});
+      */
+      res.render("index",{users: customers});
     });
     
     
